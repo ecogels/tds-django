@@ -1,3 +1,4 @@
 .idea/
 tds_django.egg-info/
 venv/
+__pycache__

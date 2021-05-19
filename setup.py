@@ -28,6 +28,8 @@ setup(
         "Topic :: Database",
         "Topic :: Software Development :: Libraries",
     ],
-    packages=find_packages(include=['tds_django']),
+    packages=find_packages(),
+    include_package_data=True,
+    package_data={'': ['sql/*.sql']},
     python_requires=">=3.6",
 )

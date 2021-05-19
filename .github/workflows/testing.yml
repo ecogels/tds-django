@@ -1,0 +1,38 @@
+name: Python package
+
+on:
+  push:
+    branches:
+      - testing
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start DB
+        run: docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=P4ssword' -d -p 1433:1433 mcr.microsoft.com/mssql/server:2017-CU8-ubuntu
+      - uses: actions/checkout@v2
+      - name: Add django repo
+        uses: actions/checkout@v2
+        with:
+          repository: 'ecogels/django'
+          ref: '32x'
+          path: 'django'
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install wheel
+          pip install -r tests/requirements.txt
+          pip install .
+          pip install ./django/
+      - name: Runtests
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/django
+          cp tests/pytds_settings.py django/tests/
+          cd django/tests
+          rm -rf m2m_through_regress many_to_one_null serializers
+          python runtests.py --settings pytds_settings --failfast
