@@ -132,7 +132,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
                 post_actions = self._remove_constraints(model, old_field.column, new_field, index=True, pk=False,
                                                         fk=False, check=False, unique=False)
             super()._alter_field(model, old_field, new_field, old_type, new_type, old_db_params, new_db_params, strict)
-            if self.wedoit(old_field, new_field):
+            if self._field_becomes_null_unique(old_field, new_field):
                 column = new_field.column
                 condition = '%s IS NOT NULL' % self.quote_name(column)
                 sql = self._create_unique_sql(model, [column], condition=condition)
@@ -440,9 +440,9 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         return super()._create_index_sql(model, fields=fields, sql=sql, suffix=suffix, **kwargs)
 
     def _unique_should_be_added(self, old_field, new_field):
-        if self.wedoit(old_field, new_field):
+        if self._field_becomes_null_unique(old_field, new_field):
             return False
         return super()._unique_should_be_added(old_field, new_field)
 
-    def wedoit(self, old_field, new_field):
+    def _field_becomes_null_unique(self, old_field, new_field):
         return not (old_field.null and old_field.unique) and new_field.null and new_field.unique

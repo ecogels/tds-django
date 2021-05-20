@@ -62,7 +62,7 @@ AS
 BEGIN
     DECLARE @diff INT = @len - LEN(@s)
     IF @diff <= 0 RETURN LEFT(@s, @len)
-    -- could get complicate if len(@fill) > 1 so keep it simple
+    -- could get complicated if len(@fill) > 1 so keep it simple
     RETURN LEFT(REPLICATE(@fill, @diff), @diff) + @s
 END
 
@@ -75,7 +75,7 @@ AS
 BEGIN
     DECLARE @diff INT = @len - LEN(@s)
     IF @diff <= 0 RETURN LEFT(@s, @len)
-    -- could get complicate if len(@fill) > 1 so keep it simple
+    -- could get complicated if len(@fill) > 1 so keep it simple
     RETURN @s + LEFT(REPLICATE(@fill, @diff), @diff)
 END
 

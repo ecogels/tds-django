@@ -19,6 +19,9 @@
 ## Warning If you have used another backend before
 - this one uses `uniqueidentifier` field for UUIDField while others may have used nvarchar.
 
+# Installation
+`pip install bitarray python-tds tds_django`
+
 # settings.DATABASES
 
 ```python
