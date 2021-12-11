@@ -2,7 +2,7 @@ import re
 from django.conf import settings
 from django.db import DatabaseError
 from django.db.backends.base.operations import BaseDatabaseOperations
-from django.db.models import Exists, ExpressionWrapper
+from django.db.models import Exists, ExpressionWrapper, Lookup
 from django.db.models.expressions import RawSQL
 from django.db.models.sql.where import WhereNode
 from django.utils import timezone
@@ -166,7 +166,8 @@ class DatabaseOperations(BaseDatabaseOperations):
         return bool(value) if value in (0, 1) else value
 
     def conditional_expression_supported_in_where_clause(self, expression):
-        if isinstance(expression, (Exists, WhereNode)):
+        """ same as oracle """
+        if isinstance(expression, (Exists, Lookup, WhereNode,)):
             return True
         if isinstance(expression, ExpressionWrapper) and expression.conditional:
             return self.conditional_expression_supported_in_where_clause(expression.expression)
@@ -236,7 +237,7 @@ class DatabaseOperations(BaseDatabaseOperations):
         return f'DATEDIFF_BIG(microsecond, {rhs_sql}, {lhs_sql})', (*rhs_params, *lhs_params)
 
     def combine_duration_expression(self, connector, sub_expressions):
-        if connector not in ['+', '-']:
+        if connector not in ['+', '-',]:
             raise DatabaseError('Invalid connector for timedelta: %s.' % connector)
         lhs, rhs = sub_expressions
         sign = '-' if connector == '-' else ''

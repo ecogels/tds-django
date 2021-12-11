@@ -15,8 +15,8 @@ jobs:
       - name: Add django repo
         uses: actions/checkout@v2
         with:
-          repository: 'ecogels/django'
-          ref: '32x'
+          repository: 'django/django'
+          ref: 'stable/4.0.x'
           path: 'django'
       - name: Setup python
         uses: actions/setup-python@v2

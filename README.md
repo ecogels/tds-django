@@ -1,7 +1,13 @@
-# SQL Server backend for Django 3.2
-
-- django 3.2
+# SQL Server backend for Django >=3.2
+- django 4
+- django 3.2 (pypi package version 0.1)
 - tested and used with SQL Server 2017
+
+## Warning
+- There is an official package supported by microsoft, microsoft/mssql-django.
+- This package does not need pyodbc nor the microsoft odbc driver, only pytds.
+- This passes about 15000 tests from the django test suite but I personally use the django ORM mostly in a basic way and
+don't use most of the features.
 
 ## Requirements
 - [python-tds](https://github.com/denisenkom/pytds)
@@ -21,6 +27,9 @@
 
 # Installation
 `pip install bitarray python-tds tds_django`
+
+For django 3.2
+`pip install bitarray python-tds tds_django==0.1`
 
 # settings.DATABASES
 

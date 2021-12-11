@@ -45,6 +45,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     supports_temporal_subtraction = True
     supports_transactions = True
 
+    ignores_unnecessary_order_by_in_subqueries = False
+
     test_db_allows_multiple_connections = False
 
     django_test_skips = {
@@ -128,6 +130,10 @@ class DatabaseFeatures(BaseDatabaseFeatures):
         "To check?": {
             # pass with wrong error without mars, not pass on mars, pytds bug?
             'backends.tests.BackendTestCase.test_cursor_contextmanager',
+            # TODO check more
+            'expressions.tests.FTimeDeltaTests.test_durationfield_multiply_divide',
+            # doable but low priority
+            'queries.test_bulk_update.BulkUpdateTests.test_updated_rows_when_passing_duplicates',
             # TODO json, currenlty marked as not available in features
             # 'model_fields.test_jsonfield.TestQuerying.test_has_any_keys',
             # 'model_fields.test_jsonfield.TestQuerying.test_array_key_contains',

@@ -1,9 +1,11 @@
-from django.db.models import IntegerField, Lookup
+from django.db.models import BooleanField, IntegerField, Lookup
 from django.db.models.aggregates import Avg, Count, StdDev, Variance
-from django.db.models.expressions import Value, OrderBy, Exists, RawSQL, Window, ExpressionList, Case, When
+from django.db.models.expressions import Value, OrderBy, Exists, RawSQL, Window, ExpressionList, Case, When, \
+    DurationExpression, CombinedExpression
 from django.db.models.fields.json import HasKeyLookup
 from django.db.models.functions import Now, ATan2, Chr, Collate, Greatest, Least, Length, LPad, Random, \
-    Repeat, RPad, StrIndex, Substr, Log, Ln, Mod, Round, Degrees, Power, Radians, RowNumber, JSONObject
+    Repeat, RPad, StrIndex, Substr, Log, Ln, Mod, Round, Degrees, Power, Radians, RowNumber
+from django.db.models.lookups import BuiltinLookup
 
 
 def as_sqlserver(expression):
@@ -172,14 +174,6 @@ def sqlserver_round(self, compiler, connection, **extra_context):
     return self.as_sql(compiler, connection, template='%(function)s(%(expressions)s, 0)', **extra_context)
 
 
-@as_sqlserver(Exists)
-def exists(self, compiler, connection, **extra):
-    sql, params = self.as_sql(compiler, connection, **extra)
-    if hasattr(self, 'inside_order_by'):
-        return 'IIF({},1, 0)'.format(sql), params
-    return sql, params
-
-
 @as_sqlserver(OrderBy)
 def orderby(self, compiler, connection, **extra):
     if self.nulls_last or self.nulls_first:
@@ -193,8 +187,13 @@ def orderby(self, compiler, connection, **extra):
         copy.nulls_last = copy.nulls_first = False  # otherwise as_sql overwrites template
         return copy.as_sql(compiler, connection, template=template, **extra)
 
-    if isinstance(self.expression, Exists):
-        self.expression.inside_order_by = True
+    if isinstance(self.expression, (CombinedExpression, BuiltinLookup, Exists)) and \
+            not isinstance(self.expression, (DurationExpression,)) and \
+            isinstance(self.expression.output_field, BooleanField):
+        # problem with DurationExpression is that output_field is calculated too early if we check it here
+        copy = self.copy()
+        copy.expression = Case(When(self.expression, then=True), default=False)
+        return copy.as_sql(compiler, connection, **extra)
     return self.as_sql(compiler, connection, **extra)
 
 
@@ -213,13 +212,13 @@ def window(self, compiler, connection, **extra):
 
 
 @as_sqlserver(Lookup)
-def lookup(self, compiler, connection):
-    # copied from oracle
+def lookup_fn(self, compiler, connection):
+    # mostly copied from oracle
     compiler.escape_if_noparams = True
     wrapped = False
     exprs = []
     for expr in (self.lhs, self.rhs):
-        if isinstance(expr, Exists):
+        if connection.ops.conditional_expression_supported_in_where_clause(expr) or isinstance(expr, (BuiltinLookup,)):
             expr = Case(When(expr, then=True), default=False)
             wrapped = True
         exprs.append(expr)

@@ -6,6 +6,7 @@ _bulk = QuerySet.bulk_update
 
 
 def bulk_update(self, objs, fields, batch_size=None):
+    affected = 0
     if connections[self.db].vendor == 'sqlserver':
         if batch_size is not None and batch_size < 0:
             raise ValueError('Batch size must be a positive integer.')
@@ -20,7 +21,7 @@ def bulk_update(self, objs, fields, batch_size=None):
         if any(f.primary_key for f in field_names):
             raise ValueError('bulk_update() cannot be used with primary key fields.')
         if not objs:
-            return
+            return 0
         same_values = {}
         for field in field_names:
             first = ok = True
@@ -36,11 +37,12 @@ def bulk_update(self, objs, fields, batch_size=None):
             if ok:
                 same_values[field.attname] = value
         if len(same_values):
-            self.filter(pk__in={o.pk for o in objs}).update(**same_values)
+            affected = self.filter(pk__in={o.pk for o in objs}).update(**same_values)
             fields = [v for k, v in field_names.items() if k.attname not in same_values]
 
     if len(fields):
-        _bulk(self, objs, fields, batch_size)
+        return affected + _bulk(self, objs, fields, batch_size)
+    return affected
 
 
 bulk_update.alters_data = True
