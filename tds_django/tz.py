@@ -369,7 +369,7 @@ iana_win_map = {
     'Australia/Hobart': 'Tasmania Standard Time',
     'Australia/Hobart Australia/Currie Antarctica/Macquarie': 'Tasmania Standard Time',
     'Asia/Vladivostok': 'Vladivostok Standard Time',
-    'Asia/Vladivostok Asia/Ust-Nera': 'Vladivostok Standard Time',
+    'Asia/Ust-Nera': 'Vladivostok Standard Time',
     'Australia/Lord_Howe': 'Lord Howe Standard Time',
     'Pacific/Bougainville': 'Bougainville Standard Time',
     'Asia/Srednekolymsk': 'Russia Time Zone 10',

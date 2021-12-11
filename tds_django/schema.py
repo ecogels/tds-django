@@ -135,7 +135,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
             if self._field_becomes_null_unique(old_field, new_field):
                 column = new_field.column
                 condition = '%s IS NOT NULL' % self.quote_name(column)
-                sql = self._create_unique_sql(model, [column], condition=condition)
+                sql = self._create_unique_sql(model, [new_field], condition=condition)
                 post_actions.append(sql)
 
             for sql in post_actions:
@@ -374,7 +374,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
                 elif info['unique'] and unique:
                     sql = self.sql_delete_unique
                     if new_field:
-                        columns = [c if c != column_name else new_field.column for c in info['columns']]
+                        columns = [model._meta.get_field(c) if c != column_name else new_field for c in info['columns']]
                         reverse.append(self._create_unique_sql(model, columns, name))
                 elif info['index'] and index:
                     sql = self.sql_delete_index
@@ -436,7 +436,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         if not sql and len(fields) == 1 and fields[0].unique and fields[0].null:
             column = fields[0].column
             condition = '%s IS NOT NULL' % self.quote_name(column)
-            return self._create_unique_sql(model, [column], condition=condition)
+            return self._create_unique_sql(model, fields, condition=condition)
         return super()._create_index_sql(model, fields=fields, sql=sql, suffix=suffix, **kwargs)
 
     def _unique_should_be_added(self, old_field, new_field):
