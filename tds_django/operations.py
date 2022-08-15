@@ -1,6 +1,6 @@
 import re
 from django.conf import settings
-from django.db import DatabaseError
+from django.db import DatabaseError, OperationalError
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import Exists, ExpressionWrapper, Lookup
 from django.db.models.expressions import RawSQL
@@ -33,57 +33,61 @@ class DatabaseOperations(BaseDatabaseOperations):
             return tzname[3:]
         return tzname
 
-    def _sql_tz(self, field_name, tzname):
+    def _sql_tz(self, sql, params, tzname):
         tzname = self._prepare_tzname_delta(tzname)
         if tzname[0] in '+-':
-            return "SWITCHOFFSET(%s, '%s')" % (field_name, tzname)
+            return f"SWITCHOFFSET({sql}, '{tzname}')", params
         else:
-            return "%s AT TIME ZONE '%s'" % (field_name, tzname)
+            return f"{sql} AT TIME ZONE '{tzname}'", params
 
-    def _convert_field_to_tz(self, field_name, tzname):
+    def _convert_sql_to_tz(self, sql, params, tzname):
         if tzname and settings.USE_TZ and self.connection.timezone_name != tzname:
-            field_name = self._sql_tz(field_name, self.connection.timezone_name or 'UTC')
-            return self._sql_tz(field_name, tzname)
-        return field_name
+            sql, params = self._sql_tz(sql, params, self.connection.timezone_name or 'UTC')
+            return self._sql_tz(sql, params, tzname)
+        return sql, params
 
-    def datetime_extract_sql(self, lookup_type, field_name, tzname):
-        field_name = self._convert_field_to_tz(field_name, tzname)
-        return self.date_extract_sql(lookup_type, field_name)
+    def datetime_extract_sql(self, lookup_type, sql, params, tzname):
+        sql, params = self._convert_sql_to_tz(sql, params, tzname)
+        return self.date_extract_sql(lookup_type, sql, params)
 
-    def date_extract_sql(self, lookup_type, field_name):
+
+    def date_extract_sql(self, lookup_type, sql, params):
         # TODO GET SCHEMA. IN CONNECTION?
-        return "dbo.django_date_extract('%s', %s)" % (lookup_type, field_name)
+        if not lookup_type.lower() in 'year quarter month dayofyear day weekday hour minute week second ' \
+                'millisecond microsecond nanosecond tzoffset iso_week iso_week_day iso_year week_day'.split():
+            raise OperationalError(f'Lookup {lookup_type} not supported.')
+        return f"dbo.django_date_extract('{lookup_type.lower()}', {sql})", params
 
-    def datetime_cast_date_sql(self, field_name, tzname):
-        field_name = self._convert_field_to_tz(field_name, tzname)
-        return 'CAST(%s AS DATE)' % field_name
+    def datetime_cast_date_sql(self, sql, params, tzname):
+        sql, params = self._convert_sql_to_tz(sql, params, tzname)
+        return f'CAST({sql} AS DATE)', params
 
-    def date_trunc_sql(self, lookup_type, field_name, tzname=None):
-        sql = self.datetime_trunc_sql(lookup_type, field_name, tzname)
-        return 'CAST(%s AS DATE)' % sql
+    def date_trunc_sql(self, lookup_type, sql, params, tzname=None):
+        sql, params = self.datetime_trunc_sql(lookup_type, sql, params, tzname)
+        return f'CAST({sql} AS DATE)', params
 
-    def datetime_trunc_sql(self, lookup_type, field_name, tzname=None):
-        field_name = self._convert_field_to_tz(field_name, tzname)
-        sql = f"dbo.django_datetime_trunc('{lookup_type}', {field_name})"
-        return sql
+    def datetime_trunc_sql(self, lookup_type, sql, params, tzname=None):
+        sql, params = self._convert_sql_to_tz(sql, params, tzname)
+        if not lookup_type.lower() in 'year quarter month dayofyear day weekday hour minute week second'.split():
+            raise OperationalError(f'Lookup {lookup_type} not supported.')
+        return f"dbo.django_datetime_trunc('{lookup_type}', {sql})", params
 
-    def datetime_cast_time_sql(self, field_name, tzname):
-        field_name = self._convert_field_to_tz(field_name, tzname)
-        return 'CAST(%s as TIME)' % field_name
+    def datetime_cast_time_sql(self, sql, params, tzname):
+        sql, params = self._convert_sql_to_tz(sql, params, tzname)
+        return f'CAST({sql} as TIME)', params
 
-    def time_trunc_sql(self, lookup_type, field_name, tzname=None):
+    def time_trunc_sql(self, lookup_type, sql, params, tzname=None):
         """ similar mysql """
-        field_name = self._convert_field_to_tz(field_name, tzname)
+        sql, params = self._convert_sql_to_tz(sql, params, tzname)
         fields = {
             'hour': r'hh\:\0\0\:\0\0',
             'minute': r'hh\:mm\:\0\0',
             'second': r'hh\:mm\:ss',
         }
         if lookup_type in fields:
-            format_str = fields[lookup_type]
-            return "CAST(FORMAT(CAST(%s AS TIME), '%s') AS TIME)" % (field_name, format_str)
+            return f"CAST(FORMAT(CAST({sql} AS TIME), '{fields[lookup_type]}') AS TIME)", params
         else:
-            return 'CAST(%s as TIME)' % field_name
+            return f'CAST({sql} as TIME)', params
 
     def quote_name(self, name):
         """
@@ -285,11 +289,11 @@ class DatabaseOperations(BaseDatabaseOperations):
         return len(objs)
 
     def cache_key_culling_sql(self):
-        return 'SELECT cache_key FROM %s ORDER BY cache_key OFFSET %%s ROWS FETCH FIRST 1 ROWS ONLY'
+        return 'SELECT [cache_key] FROM %s ORDER BY cache_key OFFSET %%s ROWS FETCH FIRST 1 ROWS ONLY'
 
     def last_executed_query(self, cursor, sql, params):
         if params:
-            m = tuple(f'{self.connection.SchemaEditorClass.quote_value(p) if p else "NULL"}' for p in params)
+            m = tuple(f'{self.connection.SchemaEditorClass.quote_value(p) if p is not None else "NULL"}' for p in params)
             return sql % m
         return sql
 

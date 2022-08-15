@@ -22,6 +22,10 @@ def bulk_update(self, objs, fields, batch_size=None):
             raise ValueError('bulk_update() cannot be used with primary key fields.')
         if not objs:
             return 0
+        for obj in objs:
+            obj._prepare_related_fields_for_save(
+                operation_name="bulk_update", fields=[self.model._meta.get_field(name) for name in fields]
+            )
         same_values = {}
         for field in field_names:
             first = ok = True

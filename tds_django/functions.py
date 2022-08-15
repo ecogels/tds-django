@@ -1,6 +1,6 @@
 from django.db.models import BooleanField, IntegerField, Lookup
 from django.db.models.aggregates import Avg, Count, StdDev, Variance
-from django.db.models.expressions import Value, OrderBy, Exists, RawSQL, Window, ExpressionList, Case, When, \
+from django.db.models.expressions import Value, OrderBy, OrderByList, Exists, RawSQL, Window, ExpressionList, Case, When, \
     DurationExpression, CombinedExpression
 from django.db.models.fields.json import HasKeyLookup
 from django.db.models.functions import Now, ATan2, Chr, Collate, Greatest, Least, Length, LPad, Random, \
@@ -206,7 +206,7 @@ def has_key_lookup(self, compiler, connection):
 def window(self, compiler, connection, **extra):
     if self.order_by is None and isinstance(self.source_expression, RowNumber):
         copy = self.copy()
-        copy.order_by = ExpressionList(*[expr for expr, _ in compiler.get_order_by()])
+        copy.order_by = OrderByList(*[expr for expr, _ in compiler.get_order_by()])
         return copy.as_sql(compiler, connection, **extra)
     return self.as_sql(compiler, connection, **extra)
 

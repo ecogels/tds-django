@@ -1,2 +1,2 @@
 python-tds==1.11.0
-bitarray==2.3.4
+bitarray==2.6.0

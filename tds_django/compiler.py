@@ -73,8 +73,11 @@ class SQLInsertCompiler(compiler.SQLInsertCompiler, SQLCompiler):
         # going to be column names (so we can avoid the extra overhead).
         qn = self.connection.ops.quote_name
         opts = self.query.get_meta()
-        insert_statement = self.connection.ops.insert_statement(ignore_conflicts=self.query.ignore_conflicts)
-        result = ['%s %s' % (insert_statement, qn(opts.db_table))]
+        insert_statement = self.connection.ops.insert_statement(
+            on_conflict=self.query.on_conflict,
+        )
+        result = ["%s %s" % (insert_statement, qn(opts.db_table))]
+
         # PATCH START for sql server we ignore identity fields differently
         if self.query.fields:
             fields = self.query.fields
@@ -89,22 +92,32 @@ class SQLInsertCompiler(compiler.SQLInsertCompiler, SQLCompiler):
             fields = []
         # PATCH END
 
+
         # Currently the backends just accept values when generating bulk
         # queries and generate their own placeholders. Doing that isn't
         # necessary and it should be possible to use placeholders and
         # expressions in bulk inserts too.
-        can_bulk = (not self.returning_fields and self.connection.features.has_bulk_insert)
+        can_bulk = (
+            not self.returning_fields and self.connection.features.has_bulk_insert
+        )
 
         placeholder_rows, param_rows = self.assemble_as_sql(fields, value_rows)
 
-        ignore_conflicts_suffix_sql = self.connection.ops.ignore_conflicts_suffix_sql(
-            ignore_conflicts=self.query.ignore_conflicts
+        on_conflict_suffix_sql = self.connection.ops.on_conflict_suffix_sql(
+            fields,
+            self.query.on_conflict,
+            self.query.update_fields,
+            self.query.unique_fields,
         )
-        if self.returning_fields and self.connection.features.can_return_columns_from_insert:
+        if (
+            self.returning_fields
+            and self.connection.features.can_return_columns_from_insert
+        ):
             if self.connection.features.can_return_rows_from_bulk_insert:
-                result.append(self.connection.ops.bulk_insert_sql(fields, placeholder_rows))
+                result.append(
+                    self.connection.ops.bulk_insert_sql(fields, placeholder_rows)
+                )
                 params = param_rows
-
             # PATCH START
             elif self.query.fields:
                 result.append('VALUES (%s)' % ', '.join(placeholder_rows[0]))
@@ -114,21 +127,21 @@ class SQLInsertCompiler(compiler.SQLInsertCompiler, SQLCompiler):
                 params = []
             # PATCH END
 
-            if ignore_conflicts_suffix_sql:
-                result.append(ignore_conflicts_suffix_sql)
+            if on_conflict_suffix_sql:
+                result.append(on_conflict_suffix_sql)
             # Skip empty r_sql to allow subclasses to customize behavior for
             # 3rd party backends. Refs #19096.
-            r_sql, self.returning_params = self.connection.ops.return_insert_columns(self.returning_fields)
+            r_sql, self.returning_params = self.connection.ops.return_insert_columns(
+                self.returning_fields
+            )
             if r_sql:
                 # PATCH START sql needs output before values
                 result.insert(-1, r_sql)
                 # PATCH END
-
                 params += [self.returning_params]
             return [(" ".join(result), tuple(chain.from_iterable(params)))]
 
         if can_bulk:
-
             # PATCH START
             if not self.query.fields:
                 result.append('DEFAULT VALUES')
@@ -137,12 +150,12 @@ class SQLInsertCompiler(compiler.SQLInsertCompiler, SQLCompiler):
             # PATCH END
 
             result.append(self.connection.ops.bulk_insert_sql(fields, placeholder_rows))
-            if ignore_conflicts_suffix_sql:
-                result.append(ignore_conflicts_suffix_sql)
+            if on_conflict_suffix_sql:
+                result.append(on_conflict_suffix_sql)
             return [(" ".join(result), tuple(p for ps in param_rows for p in ps))]
         else:
-            if ignore_conflicts_suffix_sql:
-                result.append(ignore_conflicts_suffix_sql)
+            if on_conflict_suffix_sql:
+                result.append(on_conflict_suffix_sql)
             return [
                 (" ".join(result + ["VALUES (%s)" % ", ".join(p)]), vals)
                 for p, vals in zip(placeholder_rows, param_rows)

@@ -61,14 +61,6 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         cursor.execute(Introspection.relations, (table_name, ))
         return {item[0]: (item[2], item[1]) for item in cursor.fetchall()}
 
-    def get_key_columns(self, cursor, table_name):
-        """
-        Returns a list of (column_name, referenced_table_name, referenced_column_name) for all
-        key columns in given table.
-        """
-        cursor.execute(Introspection.key_columns, (table_name, ))
-        return [tuple(row) for row in cursor.fetchall()]
-
     def get_constraints(self, cursor, table_name):
         """
         Retrieves any constraints or keys (unique, pk, fk, check, index)
