@@ -21,12 +21,17 @@ don't use most of the features.
 - JSON
 - foreign keys to a nullable field (limitation of SQL Server)
 - feel free to read `tds_django/features.py` for more details.
+- queryset iterator with chunk size
 
 ## Warning If you have used another backend before
 - this one uses `uniqueidentifier` field for UUIDField while others may have used nvarchar.
 
 # Installation
-`pip install bitarray python-tds tds_django`
+For django 4.1
+`pip install bitarray python-tds tds_django==4.1.0`
+
+For django 4.0
+`pip install bitarray python-tds tds_django==4.0.0`
 
 For django 3.2
 `pip install bitarray python-tds tds_django==0.1`
