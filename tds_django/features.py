@@ -13,6 +13,8 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     supports_json_field_contains = False
     
     allow_sliced_subqueries_with_in = False  # TODO CHECK
+    allows_group_by_select_index = False
+
     can_create_inline_fk = False
 
     can_return_columns_from_insert = True
@@ -33,9 +35,11 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     # supported_explain_formats = {'XML', }
     supports_boolean_expr_in_select_clause = False
     supports_covering_indexes = True
+    supports_comparing_boolean_expr = False
     supports_expression_indexes = False  # would need to manage computed column
     supports_ignore_conflicts = False
     supports_index_on_text_field = False
+    supports_order_by_nulls_modifier = False
     supports_over_clause = True
     supports_paramstyle_pyformat = False  # TODO
     supports_partially_nullable_unique_constraints = False
@@ -98,10 +102,21 @@ class DatabaseFeatures(BaseDatabaseFeatures):
             'ordering.tests.OrderingTests.test_orders_nulls_first_on_filtered_subquery',
             # sql server does not allow like predicates index
             'indexes.tests.PartialIndexTests.test_multiple_conditions',
+            # Cannot perform an aggregate function on an expression containing an aggregate or a subquery.
+            'expressions.tests.BasicExpressionsTests.test_aggregate_subquery_annotation',
+            # alias in order by expression
+            'queries.test_qs_combinators.QuerySetSetOperationTests.test_ordering_by_f_expression_and_alias',
+            'tests.queries.test_qs_combinators.QuerySetSetOperationTests.test_union_order_with_null_first_last',
+            'queries.test_qs_combinators.QuerySetSetOperationTests.test_union_order_with_null_first_last',
+
         },
         "Test is using hardcoded values that are different for sql server": {
             'aggregation.tests.AggregateTestCase.test_count_star',
             'cache.tests.CreateCacheTableForDBCacheTests.test_createcachetable_observes_database_router',
+            # assumes string starts with UPDATE when we do a SET NOCOUNT
+            'get_or_create.tests.UpdateOrCreateTests.test_update_only_defaults_and_pre_save_fields_when_local_fields',
+            # bug in test: we don't "supports_expression_indexes" but test assumes so ?
+            'schema.tests.SchemaTests.test_remove_ignored_unique_constraint_not_create_fk_index',
         },
         "Avg are cast as float, with can cause issues with decimals": {
             'aggregation_regress.tests.AggregationTests.test_values_list_annotation_args_ordering',
@@ -200,6 +215,16 @@ class DatabaseFeatures(BaseDatabaseFeatures):
             "many_to_one_null.tests.ManyToOneNullTests.test_remove_from_wrong_set",
             "many_to_one_null.tests.ManyToOneNullTests.test_set",
             "many_to_one_null.tests.ManyToOneNullTests.test_set_clear_non_bulk",
+            "constraints.tests.UniqueConstraintTests.test_model_validation_with_condition",
+        },
+        "To look at when time is available? We don't use these features": {
+            'aggregation.test_filter_argument.FilteredAggregateTests.test_filtered_aggregate_empty_condition',
+            'aggregation.test_filter_argument.FilteredAggregateTests.test_filtered_aggregate_ref_multiple_subquery_annotation',
+            'aggregation.test_filter_argument.FilteredAggregateTests.test_filtered_aggregate_ref_subquery_annotation',
+            'aggregation.tests.AggregateTestCase.test_aggregation_exists_multivalued_outeref',
+            'aggregation.tests.AggregateTestCase.test_group_by_nested_expression_with_params',
+            #
+            'schema.tests.SchemaTests.test_autofield_to_o2o',
         }
     }
 

@@ -9,10 +9,17 @@ class SQLCompiler(compiler.SQLCompiler):
     _re_constant = re.compile(r'^\s*\(?\s*\d+\s*\)?\s*')
 
     def as_sql(self, with_limits=True, with_col_aliases=False):
+        if self.query.subquery and not with_limits:
+            self.query.clear_ordering(force=True)
+
         sql, params = super().as_sql(with_limits=with_limits, with_col_aliases=with_col_aliases)
         if with_limits and not self.query.low_mark and self.query.high_mark is not None:
             if self.query.combinator == 'union':
-                sql = f'SELECT TOP {self.query.high_mark} * FROM ({sql}) t'
+                try:
+                    idx = sql.index('ORDER BY')
+                    sql = f'SELECT TOP {self.query.high_mark} * FROM ({sql[:idx]}) t {sql[idx:]}'
+                except ValueError:
+                    sql = f'SELECT TOP {self.query.high_mark} * FROM ({sql}) t'
             else:
                 needle = 'SELECT DISTINCT' if self.query.distinct else 'SELECT'
                 sql = sql.replace(needle, needle + ' TOP %d' % self.query.high_mark, 1)

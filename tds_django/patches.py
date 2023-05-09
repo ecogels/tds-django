@@ -8,7 +8,7 @@ _bulk = QuerySet.bulk_update
 def bulk_update(self, objs, fields, batch_size=None):
     affected = 0
     if connections[self.db].vendor == 'sqlserver':
-        if batch_size is not None and batch_size < 0:
+        if batch_size is not None and batch_size <= 0:
             raise ValueError('Batch size must be a positive integer.')
         if not fields:
             raise ValueError('Field names must be given to bulk_update().')

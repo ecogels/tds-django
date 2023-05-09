@@ -48,7 +48,11 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         extras = {line[0]: line[1:] for line in cursor.fetchall()}
 
         cursor.execute('SELECT TOP 1 * FROM %s' % self.connection.ops.quote_name(table_name, ))
-        return [FieldInfo(*column, *extras[column[0]]) for column in cursor.description]
+        return [FieldInfo(name, type_code,
+                          internal_size if display_size is None else display_size,
+                          internal_size, precision, scale, null_ok,
+                          *extras[name])
+                for name, type_code, display_size, internal_size, precision, scale, null_ok in cursor.description]
 
     def get_sequences(self, cursor, table_name, table_fields=()):
         cursor.execute(Introspection.sequences, (table_name, ))

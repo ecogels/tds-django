@@ -16,8 +16,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
     sql_alter_column_default = 'ADD DEFAULT %(default)s FOR %(column)s'
     sql_delete_column = 'ALTER TABLE %(table)s DROP COLUMN %(column)s'
     sql_alter_column_no_default = 'DROP CONSTRAINT IF EXISTS %(column)s'
-    sql_alter_column_type = 'ALTER COLUMN %(column)s %(type)s'
-    sql_alter_column_collate = 'ALTER COLUMN %(column)s %(type)s %(collation)s'
+    sql_alter_column_type = 'ALTER COLUMN %(column)s %(type)s %(collation)s'
     sql_delete_index = 'DROP INDEX %(name)s ON %(table)s'
     sql_delete_table = Misc.delete_table
     sql_rename_column = "EXEC sp_rename '%(table)s.%(old_column)s', %(new_column)s, 'COLUMN'"
@@ -400,8 +399,9 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
                     })
         return reverse if new_field else None
 
-    def _alter_column_type_sql(self, model, old_field, new_field, new_type):
-        fragment, more = super()._alter_column_type_sql(model, old_field, new_field, new_type)
+    def _alter_column_type_sql(self, model, old_field, new_field, new_type, old_collation, new_collation):
+        fragment, more = super()._alter_column_type_sql(model, old_field, new_field, new_type, old_collation,
+                                                        new_collation)
         if not new_field.null:
             (sql, params) = fragment
             fragment = (sql + ' NOT NULL', params)
@@ -410,8 +410,8 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         more += [(sql, []) for sql in todo]
         return fragment, more
 
-    def _collate_sql(self, collation):
-        return ' COLLATE ' + collation
+    def _collate_sql(self, collation, old_collation=None, table_name=None):
+        return ' COLLATE ' + collation if collation else ''
 
     def _field_should_be_indexed(self, model, field):
         """ we prevent the nullable unique constraint at table creation so we need to do it now """

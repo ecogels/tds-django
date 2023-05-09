@@ -10,18 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Start DB
-        run: docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=P4ssword' -d -p 1433:1433 mcr.microsoft.com/mssql/server:2017-CU8-ubuntu
+        run: docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=P4ssword' -d -p 1433:1433 mcr.microsoft.com/mssql/server:2017-CU29-ubuntu-16.04
       - uses: actions/checkout@v2
       - name: Add django repo
         uses: actions/checkout@v2
         with:
           repository: 'django/django'
-          ref: 'stable/4.1.x'
+          ref: 'stable/4.2.x'
           path: 'django'
       - name: Setup python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.11
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

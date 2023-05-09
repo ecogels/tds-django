@@ -5,7 +5,7 @@ class DatabaseCreation(BaseDatabaseCreation):
 
     def create_test_db(self, *args, **kwargs):
         import os
-        db_name = super().create_test_db()
+        db_name = super().create_test_db(*args, **kwargs)
 
         here = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
         with self.connection.cursor() as cursor:
