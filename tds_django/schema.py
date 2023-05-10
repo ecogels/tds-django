@@ -56,7 +56,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         if drop:
             with self.connection.cursor() as cursor:
                 defaults = self.connection.introspection.get_table_defaults(cursor, model._meta.db_table)
-                constraint_name = defaults.get(new_field.column, ['DEF_DOES_NOT_EXISTS'])[0]
+                constraint_name = defaults.get(new_field.column, ['DEF_DOES_NOT_EXIST'])[0]
             return (self.sql_alter_column_no_default % {
                 'column': constraint_name,
             }, [])

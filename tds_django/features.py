@@ -86,13 +86,9 @@ class DatabaseFeatures(BaseDatabaseFeatures):
         },
         "unsupported by SQL Server": {
             # subquery in agg function
-            'aggregation.tests.AggregateTestCase.test_aggregation_subquery_annotation_values_collision',
             'aggregation.test_filter_argument.FilteredAggregateTests.test_filtered_aggregate_on_exists',
-            'db_functions.math.test_mod.ModTests.test_float',
-            # subquery in avg
             'expressions_case.tests.CaseExpressionTests.test_annotate_with_in_clause',
-            # ORDER BY LOB in window function
-            'expressions_window.tests.WindowFunctionTests.test_key_transform',
+            'expressions.tests.BasicExpressionsTests.test_aggregate_subquery_annotation',
             # NTH_RESULT: could be done
             'expressions_window.tests.WindowFunctionTests.test_nth_returns_null',
             'expressions_window.tests.WindowFunctionTests.test_nthvalue',
@@ -100,22 +96,19 @@ class DatabaseFeatures(BaseDatabaseFeatures):
             'ordering.tests.OrderingTests.test_order_by_constant_value',
             # distinct + subquery, could work if rewrite distinct with group by
             'ordering.tests.OrderingTests.test_orders_nulls_first_on_filtered_subquery',
-            # sql server does not allow like predicates index
+            # sql server does not allow LIKE predicates index
             'indexes.tests.PartialIndexTests.test_multiple_conditions',
-            # Cannot perform an aggregate function on an expression containing an aggregate or a subquery.
-            'expressions.tests.BasicExpressionsTests.test_aggregate_subquery_annotation',
             # alias in order by expression
             'queries.test_qs_combinators.QuerySetSetOperationTests.test_ordering_by_f_expression_and_alias',
             'tests.queries.test_qs_combinators.QuerySetSetOperationTests.test_union_order_with_null_first_last',
             'queries.test_qs_combinators.QuerySetSetOperationTests.test_union_order_with_null_first_last',
-
         },
         "Test is using hardcoded values that are different for sql server": {
             'aggregation.tests.AggregateTestCase.test_count_star',
             'cache.tests.CreateCacheTableForDBCacheTests.test_createcachetable_observes_database_router',
             # assumes string starts with UPDATE when we do a SET NOCOUNT
             'get_or_create.tests.UpdateOrCreateTests.test_update_only_defaults_and_pre_save_fields_when_local_fields',
-            # bug in test: we don't "supports_expression_indexes" but test assumes so ?
+            # bug in test? we don't "supports_expression_indexes" but test assumes so
             'schema.tests.SchemaTests.test_remove_ignored_unique_constraint_not_create_fk_index',
         },
         "Avg are cast as float, with can cause issues with decimals": {

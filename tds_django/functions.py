@@ -2,8 +2,9 @@ from django.db.models import BooleanField, IntegerField, Lookup
 from django.db.models.aggregates import Avg, Count, StdDev, Variance
 from django.db.models.expressions import Value, OrderBy, OrderByList, Exists, RawSQL, Window, ExpressionList, Case, When, \
     DurationExpression, CombinedExpression
+from django.db.models.fields import DecimalField, FloatField
 from django.db.models.fields.json import HasKeyLookup
-from django.db.models.functions import Now, ATan2, Chr, Collate, Greatest, Least, Length, LPad, Random, \
+from django.db.models.functions import Now, ATan2, Cast, Chr, Collate, Greatest, Least, Length, LPad, Random, \
     Repeat, RPad, StrIndex, Substr, Log, Ln, Mod, Round, Degrees, Power, Radians, RowNumber
 from django.db.models.lookups import BuiltinLookup
 
@@ -160,7 +161,18 @@ def ln(self, compiler, connection, **extra_context):
 @as_sqlserver(Mod)
 def sqlserver_mod(self, compiler, connection, **extra_context):
     compiler.escape_if_noparams = True
-    return self.as_sql(compiler, connection, template='%(expressions)s', arg_joiner=' %% ', **extra_context)
+    # cast floatfield as decimal
+    output_field = DecimalField(decimal_places=12, max_digits=20)
+    clone = self.copy()
+    clone.set_source_expressions(
+        [
+            Cast(expression, output_field)
+            if isinstance(expression.output_field, FloatField)
+            else expression
+            for expression in self.get_source_expressions()
+        ]
+    )
+    return clone.as_sql(compiler, connection, template='%(expressions)s', arg_joiner=' %% ', **extra_context)
 
 
 @as_sqlserver(Power)
