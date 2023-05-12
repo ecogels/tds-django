@@ -101,6 +101,10 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     def get_connection_params(self):
         settings_dict = self.settings_dict
         # TODO warnings for user
+        # skipped: as_dict use_tz bytes_to_unicode row_strategy server(?)
+        allowed_params = 'timeout login_timeout appname tds_version use_mars auth readonly load_balancer ' \
+                         'failover_partner cafile sock validate_host enc_login_only disable_connect_retry ' \
+                         'pooling use_sso'.split()
         conn_params = {
             'dsn': settings_dict['HOST'] or 'localhost',
             'port': settings_dict['PORT'] or 1433,
@@ -108,7 +112,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
             'user': settings_dict['USER'],
             'password': settings_dict['PASSWORD'],
             'autocommit': getattr(settings, 'AUTOCOMMIT', False),
-            'use_mars': False,
+            **{k: v for k, v in settings_dict.items() if k in allowed_params},
          }
         return conn_params
 
