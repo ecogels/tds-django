@@ -29,7 +29,7 @@ the `tds_django/sql/clr.sql` script.
 
 # Installation
 For django 4.2
-`pip install bitarray python-tds tds_django==4.2.0`
+`pip install bitarray python-tds tds_django~=4.2`
 
 For django 4.1
 `pip install bitarray python-tds tds_django==4.1.0`

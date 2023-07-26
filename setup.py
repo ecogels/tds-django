@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="tds-django",
-    version="4.2.1",
+    version="4.2.2",
     author="Etienne Cogels",
     author_email="ecogels@users.noreply.github.com",
     description="Django backend for SQL Server using tds",
