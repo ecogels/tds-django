@@ -1,2 +1,2 @@
-python-tds==1.12.0
-bitarray==2.7.3
+python-tds~=1.13
+bitarray~=2.8

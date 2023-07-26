@@ -3,15 +3,15 @@ from django.utils.functional import cached_property
 
 
 class DatabaseFeatures(BaseDatabaseFeatures):
-
     supports_timezones = False  # has datetimeoffset but would break things if mixed with datetimefield2?
 
     # json
-    supports_json_field = False
+    # supports_json_field = False
     can_introspect_json_field = False  # ISJSON only validates json objects, not literals
+    supports_primitives_in_json_field = False
     has_json_object_function = False
     supports_json_field_contains = False
-    
+
     allow_sliced_subqueries_with_in = False  # TODO CHECK
     allows_group_by_select_index = False
 
@@ -54,9 +54,9 @@ class DatabaseFeatures(BaseDatabaseFeatures):
 
     django_test_skips = {
         "no need to test this": {
-          'cache.tests.FileBasedCacheTests',
-          'cache.tests.FileBasedCachePathLibTests',
-          'cache.tests.LocMemCacheTests',
+            'cache.tests.FileBasedCacheTests',
+            'cache.tests.FileBasedCachePathLibTests',
+            'cache.tests.LocMemCacheTests',
         },
         "test assumption not correct for SQL Server": {
             # sql server allows double quoted table names
@@ -153,47 +153,57 @@ class DatabaseFeatures(BaseDatabaseFeatures):
             'expressions.tests.FTimeDeltaTests.test_durationfield_multiply_divide',
             # doable but low priority
             'queries.test_bulk_update.BulkUpdateTests.test_updated_rows_when_passing_duplicates',
-            # TODO json, currenlty marked as not available in features
-            # 'model_fields.test_jsonfield.TestQuerying.test_has_any_keys',
-            # 'model_fields.test_jsonfield.TestQuerying.test_array_key_contains',
-            # 'model_fields.test_jsonfield.TestQuerying.test_contained_by',
-            # 'model_fields.test_jsonfield.TestQuerying.test_contains_contained_by_with_key_transform',
-            # 'model_fields.test_jsonfield.TestQuerying.test_contains_primitives',
-            # 'model_fields.test_jsonfield.TestQuerying.test_deep_lookup_array',
-            # 'model_fields.test_jsonfield.TestQuerying.test_deep_lookup_mixed',
-            # 'model_fields.test_jsonfield.TestQuerying.test_deep_lookup_objs',
-            # 'model_fields.test_jsonfield.TestQuerying.test_deep_lookup_transform',
-            # 'model_fields.test_jsonfield.TestQuerying.test_exact',
-            # 'model_fields.test_jsonfield.TestQuerying.test_exact_complex',
-            # 'model_fields.test_jsonfield.TestQuerying.test_expression_wrapper_key_transform',
-            # 'model_fields.test_jsonfield.TestQuerying.test_join_key_transform_annotation_expression',
-            # 'model_fields.test_jsonfield.TestQuerying.test_isnull_key_or_none',
-            # 'model_fields.test_jsonfield.TestQuerying.test_isnull',
-            # 'model_fields.test_jsonfield.TestQuerying.test_deep_values',
-            # 'model_fields.test_jsonfield.TestQuerying.test_contains',
-            # 'model_fields.test_jsonfield.TestQuerying.test_has_key',
-            # 'model_fields.test_jsonfield.TestQuerying.test_has_key_deep',
-            # 'model_fields.test_jsonfield.TestQuerying.test_has_key_list',
-            # 'model_fields.test_jsonfield.TestQuerying.test_has_key_null_value',
-            # 'model_fields.test_jsonfield.TestQuerying.test_has_keys',
-            # 'model_fields.test_jsonfield.TestQuerying.test_key_iregex',
-            # 'model_fields.test_jsonfield.TestQuerying.test_key_quoted_string',
-            # 'model_fields.test_jsonfield.TestQuerying.test_key_regex',
-            # 'model_fields.test_jsonfield.TestQuerying.test_lookups_with_key_transform',
-            # 'model_fields.test_jsonfield.TestQuerying.test_order_grouping_custom_decoder',
-            # 'model_fields.test_jsonfield.TestQuerying.test_ordering_grouping_by_count',
-            # 'model_fields.test_jsonfield.TestQuerying.test_ordering_grouping_by_key_transform',
-            # 'model_fields.test_jsonfield.JSONFieldTests.test_db_check_constraints',
-            # 'model_fields.test_jsonfield.TestQuerying.test_isnull_key',
-            # 'model_fields.test_jsonfield.TestQuerying.test_key_in',
-            # 'model_fields.test_jsonfield.TestQuerying.test_key_transform_expression',
-            # 'model_fields.test_jsonfield.TestQuerying.test_key_values',
-            # 'model_fields.test_jsonfield.TestQuerying.test_nested_key_transform_expression',
-            # 'model_fields.test_jsonfield.TestQuerying.test_none_key',
-            # 'model_fields.test_jsonfield.TestQuerying.test_none_key_and_exact_lookup',
-            # 'model_fields.test_jsonfield.TestQuerying.test_none_key_exclude',
-            # 'model_fields.test_jsonfield.TestQuerying.test_ordering_by_transform',
-            # 'model_fields.test_jsonfield.TestQuerying.test_shallow_lookup_obj_target',
+            # TODO json
+             'model_fields.test_jsonfield.TestQuerying.test_deep_lookup_array',
+             'model_fields.test_jsonfield.TestQuerying.test_deep_lookup_mixed',
+             'model_fields.test_jsonfield.TestQuerying.test_deep_lookup_objs',
+             'model_fields.test_jsonfield.TestQuerying.test_deep_lookup_transform',
+             'model_fields.test_jsonfield.TestQuerying.test_deep_values',
+             'model_fields.test_jsonfield.TestQuerying.test_expression_wrapper_key_transform',
+             'model_fields.test_jsonfield.TestQuerying.test_has_key_null_value',
+             'model_fields.test_jsonfield.TestQuerying.test_has_key_number',
+             'model_fields.test_jsonfield.TestQuerying.test_isnull_key',
+             'model_fields.test_jsonfield.TestQuerying.test_isnull_key_or_none',
+             'model_fields.test_jsonfield.TestQuerying.test_join_key_transform_annotation_expression',
+             'model_fields.test_jsonfield.TestQuerying.test_key_endswith',
+             'model_fields.test_jsonfield.TestQuerying.test_key_escape',
+             'model_fields.test_jsonfield.TestQuerying.test_key_icontains',
+             'model_fields.test_jsonfield.TestQuerying.test_key_iendswith',
+             'model_fields.test_jsonfield.TestQuerying.test_key_iexact',
+             'model_fields.test_jsonfield.TestQuerying.test_key_in',
+             'model_fields.test_jsonfield.TestQuerying.test_key_iregex',
+             'model_fields.test_jsonfield.TestQuerying.test_key_istartswith',
+             'model_fields.test_jsonfield.TestQuerying.test_key_quoted_string',
+             'model_fields.test_jsonfield.TestQuerying.test_key_regex',
+             'model_fields.test_jsonfield.TestQuerying.test_key_sql_injection_escape',
+             'model_fields.test_jsonfield.TestQuerying.test_key_startswith',
+             'model_fields.test_jsonfield.TestQuerying.test_key_text_transform_char_lookup',
+             'model_fields.test_jsonfield.TestQuerying.test_key_text_transform_from_lookup',
+             'model_fields.test_jsonfield.TestQuerying.test_key_transform_annotation_expression',
+             'model_fields.test_jsonfield.TestQuerying.test_key_transform_expression',
+             'model_fields.test_jsonfield.TestQuerying.test_key_transform_raw_expression',
+             'model_fields.test_jsonfield.TestQuerying.test_key_values',
+             'model_fields.test_jsonfield.TestQuerying.test_key_values_boolean',
+             'model_fields.test_jsonfield.TestQuerying.test_lookup_exclude',
+             'model_fields.test_jsonfield.TestQuerying.test_lookup_exclude_nonexistent_key',
+             'model_fields.test_jsonfield.TestQuerying.test_nested_key_transform_annotation_expression',
+             'model_fields.test_jsonfield.TestQuerying.test_nested_key_transform_expression',
+             'model_fields.test_jsonfield.TestQuerying.test_nested_key_transform_on_subquery',
+             'model_fields.test_jsonfield.TestQuerying.test_nested_key_transform_raw_expression',
+             'model_fields.test_jsonfield.TestQuerying.test_none_key',
+             'model_fields.test_jsonfield.TestQuerying.test_none_key_and_exact_lookup',
+             'model_fields.test_jsonfield.TestQuerying.test_none_key_exclude',
+             'model_fields.test_jsonfield.TestQuerying.test_obj_subquery_lookup',
+             'model_fields.test_jsonfield.TestQuerying.test_order_grouping_custom_decoder',
+             'model_fields.test_jsonfield.TestQuerying.test_ordering_by_transform',
+             'model_fields.test_jsonfield.TestQuerying.test_ordering_grouping_by_count',
+             'model_fields.test_jsonfield.TestQuerying.test_ordering_grouping_by_key_transform',
+             'model_fields.test_jsonfield.TestQuerying.test_shallow_list_lookup',
+             'model_fields.test_jsonfield.TestQuerying.test_shallow_lookup_obj_target',
+             'model_fields.test_jsonfield.TestQuerying.test_shallow_obj_lookup',
+             'model_fields.test_jsonfield.TestQuerying.test_usage_in_subquery',
+
+             'expressions_window.tests.WindowFunctionTests.test_key_transform',
         },
         "SQL Server does not natively support unique (with multiple) nullable fields so a FK to such field will fail": {
             "many_to_one_null.tests.ManyToOneNullTests.test_add_efficiency",
